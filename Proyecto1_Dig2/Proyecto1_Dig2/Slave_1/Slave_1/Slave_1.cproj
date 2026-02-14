@@ -126,10 +126,10 @@
     <Compile Include="ADC_Lib\ADC_lib.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="I2C_conf.c">
+    <Compile Include="I2C_Lib\I2C_conf.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="I2C_conf.h">
+    <Compile Include="I2C_Lib\I2C_conf.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">
@@ -150,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ADC_Lib" />
+    <Folder Include="I2C_Lib" />
     <Folder Include="PWMT1" />
     <Folder Include="UART" />
   </ItemGroup>

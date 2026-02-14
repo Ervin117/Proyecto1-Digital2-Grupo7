@@ -7,6 +7,8 @@
 
 #include "UARTLib.h"
 
+#define F_CPU 16000000
+
 void serialUART()
 {
 	DDRD |= (1<< DDD1);

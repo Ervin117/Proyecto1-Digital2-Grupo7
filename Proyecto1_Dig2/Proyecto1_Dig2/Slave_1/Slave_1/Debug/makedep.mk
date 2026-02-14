@@ -4,7 +4,7 @@
 
 ADC_Lib\ADC_lib.c
 
-I2C_conf.c
+I2C_Lib\I2C_conf.c
 
 main.c
 

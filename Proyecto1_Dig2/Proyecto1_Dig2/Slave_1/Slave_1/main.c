@@ -15,9 +15,10 @@
 // Encabezado (librerías)
 #include <avr/io.h>
 #include <stdint.h>
+#include <stdint.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
-#include "I2C_conf.h"
+#include "I2C_Lib/I2C_conf.h"
 #include "ADC_Lib/ADC_lib.h"
 #include "UART/UARTLib.h"
 
@@ -26,7 +27,7 @@
 #define SlaveAddress 0x30
 
 uint16_t buffer = 0;
-uint8_t dato_r [4]; 
+uint16_t dato_r [4]; 
 uint8_t indice = 0; 
 uint8_t bandera = 0; 
 int16_t anguloX = 0;
@@ -34,7 +35,9 @@ int16_t anguloY = 0;
 
 //************************************************************************************
 // Function prototypes
-void motor_steper(int16_t giro); 
+void motor_steper(int16_t angulo1); 
+void num(int16_t numero); 
+void control_servo(int16_t angulo2); 
 
 //************************************************************************************
 // Main Function
@@ -46,35 +49,42 @@ int main(void)
 	DDRB |= (1 << DDB5);
 	PORTB &= ~(1 << PORTB5); //Led para encender y apgar indicando una comunicación exitosa
 	
-	Servo2(0, 8); 
+	//Servo2(0, 8); 
 	//Servo3(no_invt);
-	
-	//inicializar ADC
-	initADC(); 
 	I2C_Slave_Init(0x30); //Se define la dirección del esclavo
+	serialUART();
+	serialString("Esclavo Iniciado...\r\n");
 	sei(); //Habilitar interrupciones
 	
 	while (1)
 	{
+	
 		if(bandera){ //Reviso si el caractér de lectura esta recibiendose
 			PINB |= (1 << PINB5); //Se hace un toggle para indicar que si hay datos 
 			bandera = 0; 
-			
+		
 			anguloX = (dato_r[0] << 8) | dato_r[1];
-			anguloY = (dato_r[2] << 8) | dato_r[3]; 
+			anguloY = (dato_r[2] << 8) | dato_r[3];
+			serialString("X: "); 
+			num(anguloX);
+			serialString(" | Y: ");
+			num(anguloY);
+			serialString("\r\n"); 		
+			
 			
 		}
 		//motor_steper((int16_t) anguloY);
-		control_servo((int16_t) anguloX);
+		//control_servo((int16_t) anguloX);
+		
 	}
 }
 
 //************************************************************************************
 // NON-INterrupt subroutines
 
-void motor_steper(int16_t angulo) // meter el valor del angulo de giro 
+void motor_steper(int16_t angulo1) // meter el valor del angulo de giro 
 {
-	if (angulo >= -10 && angulo <= 10) 
+	if (angulo1 >= -10 && angulo1 <= 10) 
 	{
 		PORTD &= ~(1 << PORTD2);
 		PORTD &= ~(1 << PORTD3);
@@ -84,7 +94,7 @@ void motor_steper(int16_t angulo) // meter el valor del angulo de giro
 
 	}
 	
-	if (angulo >= 10) // Dirección 1 
+	if (angulo1 >= 10) // Dirección 1 
 	{
 		PORTD |= (1 << PORTD2);
 		PORTD &= ~(1 << PORTD3);
@@ -111,7 +121,7 @@ void motor_steper(int16_t angulo) // meter el valor del angulo de giro
 		_delay_ms(2);
 	}
 	
-	if (angulo <= -10) // Dirección 2
+	if (angulo1 <= -10) // Dirección 2
 	{
 		PORTD &= ~(1 << PORTD2);
 		PORTD &= ~(1 << PORTD3);
@@ -140,23 +150,51 @@ void motor_steper(int16_t angulo) // meter el valor del angulo de giro
 	
 }
 
-void control_servo(int16_t angulo)
+void control_servo(int16_t angulo2)
 {
-	if (angulo > -15 && angulo < 15)
+	if (angulo2 > -15 && angulo2 < 15)
 	{
-		angulo = 0; // zona muerta
+		angulo2 = 0; // zona muerta
 	}
 
-	if (angulo < -90) angulo = -90;
-	if (angulo > 90)  angulo = 90;
+	if (angulo2 < -90) angulo2 = -90;
+	if (angulo2 > 90)  angulo2 = 90;
 
-	uint16_t duty = 2000 + ((angulo + 90) * 2000) / 180;
+	uint16_t duty = 2000 + ((angulo2 + 90) * 2000) / 180;
 	updateDutyCycle_servo2(duty);
+}
+
+void num(int16_t numero)
+{
+	char temp[7];
+	uint8_t i = 0;
+	
+	if (numero == 0) {
+		serialLet('0');
+		return;
+	}
+	
+	if (numero < 0) {
+		serialLet('-');
+		numero = -numero;
+	}
+	
+	// Conversión de entero a caracteres
+	while (numero > 0) {
+		temp[i++] = (numero % 10) + '0';
+		numero /= 10;
+	}
+	
+	// Imprimir en orden inverso (porque el while anterior saca los dígitos al revés)
+	while (i > 0) {
+		serialLet(temp[--i]);
+	}
 }
 
 //************************************************************************************
 // Interrupt subroutines
-ISR(TWI_vect){
+ISR(TWI_vect)
+{
 	uint8_t estado = TWSR & 0xF8; // Máscara para el estado
 
 	switch (estado) {
@@ -181,7 +219,8 @@ ISR(TWI_vect){
 		default:
 		TWCR = (1 << TWINT) | (1 << TWEA) | (1 << TWEN) | (1 << TWIE);
 		break;
-	}
+		}
+}
 
 /*
 	uint8_t estado = TWSR & 0xFC; //Nos quedamos unicamente con los bits de estado TWI Status
@@ -232,5 +271,3 @@ ISR(TWI_vect){
 			break;
 		
 	}*/
-	
-}
