@@ -52,9 +52,6 @@ int main(void)
     
     MPU6050_Init();
     
-    // Calibración inicial simple (opcional):
-    // Se asume que arranca quieto y plano.
-    
     while (1)
     {
         // 1. Calcular y mostrar Ángulos
@@ -83,7 +80,7 @@ void angulo_giro(void)
     
     I2C_Master_Read(&high, 1); 
 	I2C_Master_Read(&low, 1); Ax = (high << 8) | low;
-    I2C_Master_Read(&high, 1); 
+    I2C_Master_Read(&high, 1);			
 	I2C_Master_Read(&low, 1); Ay = (high << 8) | low;
     I2C_Master_Read(&high, 1); 
 	I2C_Master_Read(&low, 0); Az = (high << 8) | low; 
@@ -108,11 +105,6 @@ void Enviar_angulos(int16_t anguloX, int16_t anguloY)
 	 
 	 if(I2C_Master_Write(slave1W))
 	 { 
-		 /*
-		 I2C_Master_Write(anguloX); // Byte 1: Angulo X
-		 I2C_Master_Write(anguloY); // Byte 2: Angulo Y
-		 I2C_Master_Stop();
-		 */
 		 I2C_Master_Write((uint8_t)(anguloX >> 8)); // byte alto
 		 I2C_Master_Write((uint8_t)(anguloX & 0xFF)); // byte bajo
 
@@ -129,7 +121,7 @@ void Enviar_angulos(int16_t anguloX, int16_t anguloY)
 		 serialString("Error: Esclavo no responde\r\n");
 	 }
 }
-// Funciones para inicar y enviar los numeros por serial 
+// Funciones para iniciar el MPU
 void MPU6050_Init(void) {
     I2C_Master_Start(); I2C_Master_Write(MPU_W); 
     I2C_Master_Write(PWR_MGMT_1); I2C_Master_Write(0x00);
@@ -146,8 +138,3 @@ void Enviar_Numero(int16_t numero) {
 
 //************************************************************************************
 // Interrupt subroutines
-ISR(USART_RX_vect) 
-{
-	//option = UDR0;
-}
-
