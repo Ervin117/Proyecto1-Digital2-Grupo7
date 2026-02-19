@@ -2,8 +2,8 @@
 
 // visit io.adafruit.com if you need to create an account,
 // or if you need your Adafruit IO key.
-#define IO_USERNAME "EG3"
-#define IO_KEY "aio_sZpK5935BKjmw90cONIS26131k52"
+#define IO_USERNAME ""
+#define IO_KEY ""
 
 #define WIFI_SSID "VISIT-D15"
 #define WIFI_PASS "vivelaexperiencia"
